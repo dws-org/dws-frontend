@@ -29,7 +29,7 @@ export function Header({ onMenuClick, searchValue, onSearchChange }: HeaderProps
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Suche nach Events, Orten, Genres…"
+                placeholder="Search for events, locations, genres…"
                 value={searchValue}
                 onChange={(e) => onSearchChange(e.target.value)}
                 className="pl-10 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
@@ -41,7 +41,7 @@ export function Header({ onMenuClick, searchValue, onSearchChange }: HeaderProps
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" className="hidden sm:flex text-foreground hover:bg-secondary">
               <Bell className="h-5 w-5" />
-              <span className="sr-only">Benachrichtigungen</span>
+              <span className="sr-only">Notifications</span>
             </Button>
 
             <Button variant="ghost" size="icon" className="hidden sm:flex text-foreground hover:bg-secondary">
@@ -61,7 +61,7 @@ export function Header({ onMenuClick, searchValue, onSearchChange }: HeaderProps
               className="md:hidden text-foreground hover:bg-secondary"
             >
               <Menu className="h-5 w-5" />
-              <span className="sr-only">Menü öffnen</span>
+              <span className="sr-only">Open menu</span>
             </Button>
           </div>
         </div>
@@ -71,7 +71,7 @@ export function Header({ onMenuClick, searchValue, onSearchChange }: HeaderProps
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Suche Events…"
+              placeholder="Search events…"
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10 bg-secondary border-border text-foreground placeholder:text-muted-foreground"

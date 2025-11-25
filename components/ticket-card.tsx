@@ -10,14 +10,14 @@ interface TicketCardProps {
   eventId: string
   eventTitle: string
   eventImage: string
-  status: "Aktiv" | "Vergangen" | "Storniert"
+  status: "Active" | "Past" | "Cancelled"
   seat: string
   date: string
   onOpenClick: (id: string) => void
 }
 
 export function TicketCard({ id, eventId, eventTitle, eventImage, status, seat, date, onOpenClick }: TicketCardProps) {
-  const statusVariant = status === "Aktiv" ? "aktiv" : status === "Vergangen" ? "vergangen" : "ausverkauft"
+  const statusVariant = status === "Active" ? "aktiv" : status === "Past" ? "vergangen" : "ausverkauft"
 
   return (
     <div
@@ -59,7 +59,7 @@ export function TicketCard({ id, eventId, eventTitle, eventImage, status, seat, 
           className="mt-3 w-full bg-primary text-primary-foreground hover:bg-primary/90"
           size="sm"
         >
-          Öffnen
+          Open
         </Button>
       </div>
     </div>

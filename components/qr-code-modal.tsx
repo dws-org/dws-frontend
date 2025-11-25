@@ -29,10 +29,10 @@ export function QRCodeModal({ ticket, isOpen, onClose }: QRCodeModalProps) {
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border p-4">
-          <h2 className="text-xl font-bold text-foreground">Dein Ticket</h2>
+          <h2 className="text-xl font-bold text-foreground">Your Ticket</h2>
           <Button variant="ghost" size="icon" onClick={onClose} className="text-foreground hover:bg-secondary">
             <X className="h-5 w-5" />
-            <span className="sr-only">Modal schließen</span>
+            <span className="sr-only">Close modal</span>
           </Button>
         </div>
 
@@ -43,10 +43,10 @@ export function QRCodeModal({ ticket, isOpen, onClose }: QRCodeModalProps) {
             <h3 className="font-semibold text-foreground mb-3">{ticket.eventTitle}</h3>
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>
-                <span className="font-medium">Sitz/Stehplatz:</span> {ticket.seat}
+                <span className="font-medium">Seat/Standing:</span> {ticket.seat}
               </p>
               <p>
-                <span className="font-medium">Datum:</span> {ticket.date}
+                <span className="font-medium">Date:</span> {ticket.date}
               </p>
               <p>
                 <span className="font-medium">Ticket ID:</span> {ticket.id}
@@ -67,7 +67,7 @@ export function QRCodeModal({ ticket, isOpen, onClose }: QRCodeModalProps) {
                 </div>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground text-center">Zeige diesen QR-Code beim Eingang vor</p>
+            <p className="text-xs text-muted-foreground text-center">Show this QR code at the entrance</p>
           </div>
 
           {/* Action Buttons */}
@@ -81,7 +81,7 @@ export function QRCodeModal({ ticket, isOpen, onClose }: QRCodeModalProps) {
               }`}
             >
               <Wallet className="h-4 w-4" />
-              {isAdded ? "In Wallet hinzugefügt" : "Zur Wallet hinzufügen"}
+              {isAdded ? "Added to wallet" : "Add to wallet"}
             </Button>
 
             <div className="flex gap-2">
@@ -100,7 +100,7 @@ export function QRCodeModal({ ticket, isOpen, onClose }: QRCodeModalProps) {
                 className="flex-1 border-border bg-secondary text-foreground hover:bg-muted flex items-center justify-center gap-2"
               >
                 <Share2 className="h-4 w-4" />
-                Teilen
+                Share
               </Button>
             </div>
           </div>
@@ -108,7 +108,7 @@ export function QRCodeModal({ ticket, isOpen, onClose }: QRCodeModalProps) {
           {/* Footer Note */}
           <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-3">
             <p className="text-xs text-blue-300">
-              💡 Tipp: Speichere dein Ticket in deiner Wallet für schnellen Zugriff am Event-Tag.
+              💡 Tip: Save your ticket in your wallet for quick access on event day.
             </p>
           </div>
         </div>

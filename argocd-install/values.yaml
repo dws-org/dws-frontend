@@ -1,0 +1,10 @@
+argocd:
+  domain: argocd.ltu-m7011e-6.se
+  email: leakle-5@student.ltu.se
+
+image:
+  tag: stable
+
+ingress:
+  enabled: true
+  certIssuer: letsencrypt-prod

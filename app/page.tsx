@@ -22,14 +22,14 @@ type ApiEvent = {
 
 // Hilfsfunktion: Mappt Backend-Daten auf das Frontend-Format
 function mapApiEventToUiEvent(event: ApiEvent): UiEvent {
-  const locationText = event.location || "Ort wird bekanntgegeben"
+  const locationText = event.location || "Location to be announced"
   const [cityFromLocation] = locationText.split(",")
 
   return {
     id: event.id,
-    title: event.name || "Unbenanntes Event",
+    title: event.name || "Unnamed event",
     date: event.startDate || event.startTime || new Date().toISOString(),
-    city: cityFromLocation?.trim() || "Ort folgt",
+    city: cityFromLocation?.trim() || "Location follows",
     venue: locationText,
     priceFrom: Number(event.price) || 0,
     image: event.imageUrl || "/placeholder.svg",
