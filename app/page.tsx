@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Header } from "@/components/header"
 import { EventGrid } from "@/components/event-grid"
 import { TicketCard } from "@/components/ticket-card"
@@ -11,53 +11,46 @@ import { QRCodeModal } from "@/components/qr-code-modal"
 import { Button } from "@/components/ui/button"
 import { SkeletonCard } from "@/components/skeleton-card"
 
-// Mock data
-const mockEvents = [
-  {
-    id: "e1",
-    title: "Indie Night – Aurora Live",
-    date: "2025-12-05T20:00:00Z",
-    city: "Berlin",
-    venue: "Huxleys",
-    priceFrom: 29,
-    image: "/indie.jpg",
-    tags: ["Indie", "Live"],
-    badges: ["NEU"],
-  },
-  {
-    id: "e2",
-    title: "Tech Conference 2026 Preview",
-    date: "2026-01-20T09:00:00Z",
-    city: "München",
-    venue: "ICM",
-    priceFrom: 199,
-    image: "/tech-conference.png",
-    tags: ["Tech"],
-    badges: ["Trend"],
-  },
-  {
-    id: "e3",
-    title: "Open-Air Kino – Klassiker",
-    date: "2025-08-15T19:30:00Z",
-    city: "Hamburg",
-    venue: "Stadtpark",
-    priceFrom: 0,
-    image: "/classic-cinema.png",
-    tags: ["Film", "Outdoor"],
-    badges: ["Kostenlos"],
-  },
-  {
-    id: "e4",
-    title: "Jazz Lounge – Smooth Evening",
-    date: "2025-12-15T21:00:00Z",
-    city: "Köln",
-    venue: "Jazz Club",
-    priceFrom: 35,
-    image: "/jazz-music-lounge.jpg",
-    tags: ["Jazz", "Musik"],
-    badges: ["NEU"],
-  },
-]
+type ApiEvent = {
+  id: string
+  name: string
+  description?: string
+  startDate?: string
+  startTime?: string
+  price?: string
+  endDate?: string
+  location?: string
+  capacity?: number
+  imageUrl?: string
+  category?: string
+  organizerId?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+type UiEvent = {
+  id: string
+  title: string
+  date: string
+  city: string
+  venue: string
+  priceFrom: number
+  image: string
+  tags: string[]
+  badges: string[]
+  description?: string
+  capacity?: number
+  availableTickets?: number
+  lineup?: string[]
+  location?: {
+    lat: number
+    lng: number
+    address: string
+  }
+  faqs?: Array<{ question: string; answer: string }>
+}
+
+const API_BASE_URL = "http://localhost:8085/api/v1/events"
 
 const mockTickets = [
   {
@@ -87,11 +80,97 @@ export default function Home() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
   const [ticketFilter, setTicketFilter] = useState("Aktuell")
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true)
+  const [eventsError, setEventsError] = useState<string | null>(null)
+  const [events, setEvents] = useState<UiEvent[]>([])
+  const [isLoadingEventDetail, setIsLoadingEventDetail] = useState(false)
+  const [eventDetailError, setEventDetailError] = useState<string | null>(null)
+  const [selectedEventDetail, setSelectedEventDetail] = useState<UiEvent | null>(null)
   const [showAllTickets, setShowAllTickets] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
-  const selectedEvent = mockEvents.find((e) => e.id === selectedEventId)
+  useEffect(() => {
+    const controller = new AbortController()
+
+    const fetchEvents = async () => {
+      try {
+        setIsLoadingEvents(true)
+        setEventsError(null)
+
+        const response = await fetch(API_BASE_URL, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error("Events konnten nicht geladen werden.")
+        }
+
+        const data: ApiEvent[] = await response.json()
+        setEvents(data.map(mapApiEventToUiEvent))
+      } catch (error) {
+        if ((error as Error).name === "AbortError") return
+        setEventsError((error as Error).message || "Unbekannter Fehler beim Laden der Events.")
+      } finally {
+        setIsLoadingEvents(false)
+      }
+    }
+
+    fetchEvents()
+
+    return () => {
+      controller.abort()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!selectedEventId) {
+      setSelectedEventDetail(null)
+      setEventDetailError(null)
+      return
+    }
+
+    const controller = new AbortController()
+
+    const fetchEventDetail = async () => {
+      try {
+        setIsLoadingEventDetail(true)
+        setEventDetailError(null)
+
+        const response = await fetch(`${API_BASE_URL}/${selectedEventId}`, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+          signal: controller.signal,
+        })
+
+        if (response.status === 404) {
+          setEventDetailError("Event wurde nicht gefunden.")
+          setSelectedEventDetail(null)
+          return
+        }
+
+        if (!response.ok) {
+          throw new Error("Event-Details konnten nicht geladen werden.")
+        }
+
+        const data: ApiEvent = await response.json()
+        setSelectedEventDetail(mapApiEventToUiEvent(data))
+      } catch (error) {
+        if ((error as Error).name === "AbortError") return
+        setEventDetailError((error as Error).message || "Unbekannter Fehler beim Laden des Events.")
+      } finally {
+        setIsLoadingEventDetail(false)
+      }
+    }
+
+    fetchEventDetail()
+
+    return () => controller.abort()
+  }, [selectedEventId])
+
+  const selectedEventFromList = useMemo(() => events.find((e) => e.id === selectedEventId), [events, selectedEventId])
+  const selectedEvent = selectedEventDetail ?? selectedEventFromList
   const selectedTicket = mockTickets.find((t) => t.id === selectedTicketId)
 
   const handleDetailsClick = (id: string) => {
@@ -121,22 +200,23 @@ export default function Home() {
   const visibleTickets = showAllTickets ? ticketsToDisplay : mockTickets.slice(0, itemsPerRow * maxVisibleRows)
 
   const normalizedQuery = searchQuery.trim().toLowerCase()
-  const filteredEvents =
-    normalizedQuery.length === 0
-      ? mockEvents
-      : mockEvents.filter((event) => {
-          const haystack =
-            [
-              event.title,
-              event.city,
-              event.venue,
-              ...event.tags,
-              ...(event.badges ?? []),
-            ]
-              .join(" ")
-              .toLowerCase()
-          return haystack.includes(normalizedQuery)
-        })
+  const filteredEvents = useMemo(() => {
+    if (normalizedQuery.length === 0) return events
+
+    return events.filter((event) => {
+      const haystack =
+        [
+          event.title,
+          event.city,
+          event.venue,
+          ...event.tags,
+          ...(event.badges ?? []),
+        ]
+          .join(" ")
+          .toLowerCase()
+      return haystack.includes(normalizedQuery)
+    })
+  }, [events, normalizedQuery])
 
   return (
     <div className="min-h-screen bg-background">
@@ -151,13 +231,12 @@ export default function Home() {
         <EventDetailModal
           event={{
             ...selectedEvent,
-            description: `Erleben Sie ${selectedEvent.title} - ein einzigartiges Event mit erstklassiger Unterhaltung!`,
-            capacity: 500,
-            availableTickets: 120,
-            lineup: ["Künstler 1", "Künstler 2", "DJ XYZ"],
-            location: {
-              lat: 52.52,
-              lng: 13.405,
+            description: selectedEvent.description,
+            capacity: selectedEvent.capacity ?? selectedEvent.availableTickets ?? 0,
+            availableTickets: selectedEvent.availableTickets ?? selectedEvent.capacity ?? 0,
+            location: selectedEvent.location ?? {
+              lat: 0,
+              lng: 0,
               address: `${selectedEvent.venue}, ${selectedEvent.city}`,
             },
           }}
@@ -181,6 +260,18 @@ export default function Home() {
       )}
 
       <main className="mx-auto px-4 py-8 sm:px-6 lg:px-8 max-w-7xl">
+        {isLoadingEventDetail && selectedEventId && (
+          <div className="mb-6 rounded-2xl border border-border bg-secondary/50 p-4 text-sm text-muted-foreground">
+            Eventdetails werden geladen...
+          </div>
+        )}
+
+        {eventDetailError && (
+          <div className="mb-6 rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+            {eventDetailError}
+          </div>
+        )}
+
         {/* My Tickets Section */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
@@ -224,11 +315,16 @@ export default function Home() {
             <h2 className="text-3xl font-bold text-foreground">Neue Events</h2>
           </div>
 
-          {isLoading ? (
+          {isLoadingEvents ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
                 <SkeletonCard key={i} />
               ))}
+            </div>
+          ) : eventsError ? (
+            <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-6 text-center">
+              <p className="text-destructive font-medium mb-2">{eventsError}</p>
+              <p className="text-sm text-muted-foreground">Bitte versuche es später erneut.</p>
             </div>
           ) : filteredEvents.length > 0 ? (
             <EventGrid events={filteredEvents} onDetailsClick={handleDetailsClick} onBuyClick={handleBuyClick} />
@@ -242,4 +338,31 @@ export default function Home() {
       </main>
     </div>
   )
+}
+
+function mapApiEventToUiEvent(event: ApiEvent): UiEvent {
+  const locationText = event.location || "Ort wird bekanntgegeben"
+  const [cityFromLocation] = locationText.split(",")
+
+  return {
+    id: event.id,
+    title: event.name || "Unbenanntes Event",
+    date: event.startDate || event.startTime || new Date().toISOString(),
+    city: cityFromLocation?.trim() || "Ort folgt",
+    venue: locationText,
+    priceFrom: Number(event.price) || 0,
+    image: event.imageUrl || "/placeholder.svg",
+    tags: event.category ? [event.category] : [],
+    badges: event.category ? [event.category] : [],
+    description: event.description,
+    capacity: event.capacity,
+    availableTickets: event.capacity,
+    lineup: [],
+    location: {
+      lat: 0,
+      lng: 0,
+      address: locationText,
+    },
+    faqs: [],
+  }
 }
