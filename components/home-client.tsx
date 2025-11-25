@@ -39,29 +39,29 @@ const mockTickets = [
     eventId: "e1",
     eventTitle: "Indie Night – Aurora Live",
     eventImage: "/indie.jpg",
-    status: "Aktiv" as const,
-    seat: "Stehplatz",
-    date: "05. Dez, 20:00",
+    status: "Active" as const,
+    seat: "Standing",
+    date: "Dec 05, 20:00",
   },
   {
     id: "t2",
     eventId: "e3",
     eventTitle: "Open-Air Kino – Klassiker",
     eventImage: "/classic-cinema.png",
-    status: "Vergangen" as const,
-    seat: "Sitz A12",
-    date: "15. Aug, 19:30",
+    status: "Past" as const,
+    seat: "Seat A12",
+    date: "Aug 15, 19:30",
   },
 ]
 
-const ticketFilters = ["Aktuell", "Demnächst", "Vergangen"]
+const ticketFilters = ["Current", "Upcoming", "Past"]
 
 // Hier empfangen wir die Events vom Server als "initialEvents"
 export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
-  const [ticketFilter, setTicketFilter] = useState("Aktuell")
+  const [ticketFilter, setTicketFilter] = useState("Current")
   
   // Wir nutzen direkt die Daten vom Server
   const [events] = useState<UiEvent[]>(initialEvents)
@@ -88,7 +88,7 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
 
   const handleFilterChange = (filter: string) => {
     setTicketFilter(filter)
-    if (filter === "Demnächst") {
+    if (filter === "Upcoming") {
       setShowAllTickets(true)
     } else {
       setShowAllTickets(false)
@@ -164,7 +164,7 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
         {/* My Tickets Section */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-foreground">Meine Tickets</h2>
+            <h2 className="text-3xl font-bold text-foreground">My Tickets</h2>
           </div>
 
           <div className="mb-6">
@@ -185,15 +185,15 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
                     variant="outline"
                     className="border-border text-foreground hover:bg-secondary"
                   >
-                    Mehr Tickets anzeigen ({mockTickets.length - visibleTickets.length})
+                    Show more tickets ({mockTickets.length - visibleTickets.length})
                   </Button>
                 </div>
               )}
             </>
           ) : (
             <div className="rounded-2xl border-2 border-dashed border-border p-12 text-center">
-              <p className="text-muted-foreground mb-4">Keine Tickets gefunden</p>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Jetzt Event finden</Button>
+              <p className="text-muted-foreground mb-4">No tickets found</p>
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Find event now</Button>
             </div>
           )}
         </section>
@@ -201,15 +201,15 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
         {/* New Events Section */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-foreground">Neue Events</h2>
+            <h2 className="text-3xl font-bold text-foreground">New Events</h2>
           </div>
 
           {filteredEvents.length > 0 ? (
             <EventGrid events={filteredEvents} onDetailsClick={handleDetailsClick} onBuyClick={handleBuyClick} />
           ) : (
             <div className="rounded-2xl border-2 border-dashed border-border p-12 text-center">
-              <p className="text-muted-foreground mb-4">Keine Events gefunden</p>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Kategorien entdecken</Button>
+              <p className="text-muted-foreground mb-4">No events found</p>
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Discover categories</Button>
             </div>
           )}
         </section>

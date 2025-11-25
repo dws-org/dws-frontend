@@ -11,11 +11,11 @@ interface SidebarMenuProps {
 
 export function SidebarMenu({ isOpen, onClose }: SidebarMenuProps) {
   const menuItems = [
-    { icon: Settings, label: "Einstellungen", href: "/settings" },
-    { icon: History, label: "Letzte Käufe", href: "/purchases" },
-    { icon: CreditCard, label: "Zahlungsmethoden", href: "/settings" },
-    { icon: HelpCircle, label: "Support & Hilfe", href: "/support" },
-    { icon: FileText, label: "Rechtliches", href: "/legal" },
+    { icon: Settings, label: "Settings", href: "/settings" },
+    { icon: History, label: "Recent purchases", href: "/purchases" },
+    { icon: CreditCard, label: "Payment methods", href: "/settings" },
+    { icon: HelpCircle, label: "Support & Help", href: "/support" },
+    { icon: FileText, label: "Legal", href: "/legal" },
   ]
 
   return (
@@ -35,7 +35,7 @@ export function SidebarMenu({ isOpen, onClose }: SidebarMenuProps) {
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-            <h2 className="font-semibold text-sidebar-foreground">Menü</h2>
+            <h2 className="font-semibold text-sidebar-foreground">Menu</h2>
             <Button
               variant="ghost"
               size="icon"

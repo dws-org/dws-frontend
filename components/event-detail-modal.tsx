@@ -41,7 +41,7 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
 
   const formatDate = (dateString: string) => {
     const d = new Date(dateString)
-    return d.toLocaleDateString("de-DE", {
+    return d.toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
       day: "numeric",
@@ -51,7 +51,7 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
 
   const formatTime = (dateString: string) => {
     const d = new Date(dateString)
-    return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
+    return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
   }
 
   const isOutOfStock = (event.availableTickets || 0) <= 0
@@ -59,24 +59,24 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
   const description =
     event.description ||
     `
-Erleben Sie ein unvergessliches Event im Herzen von ${event.city}. 
-${event.title} bringt die beste Unterhaltung und Atmosphäre für einen großartigen Abend. 
-Mit Top-Künstlern, modernem Veranstaltungsort und erstklassigem Service erwartet Sie ein Event der Sonderklasse.
+Experience an unforgettable event in the heart of ${event.city}. 
+${event.title} brings the best entertainment and atmosphere for a great evening. 
+With top artists, modern venue and first-class service, you can expect a premium event.
   `
 
-  const lineup = event.lineup || ["Künstler TBA"]
+  const lineup = event.lineup || ["Artists TBA"]
   const faqs = event.faqs || [
     {
-      question: "Welche Zahlungsarten werden akzeptiert?",
-      answer: "Wir akzeptieren alle gängigen Kreditkarten, PayPal und weitere digitale Zahlungsmethoden.",
+      question: "What payment methods are accepted?",
+      answer: "We accept all major credit cards, PayPal and other digital payment methods.",
     },
     {
-      question: "Kann ich mein Ticket stornieren?",
-      answer: "Stornierungen sind bis 48 Stunden vor Event möglich. Eine Gebühr von 10% wird berechnet.",
+      question: "Can I cancel my ticket?",
+      answer: "Cancellations are possible up to 48 hours before the event. A fee of 10% will be charged.",
     },
     {
-      question: "Sind Getränke im Ticketpreis enthalten?",
-      answer: "Nein, Getränke und Speisen können vor Ort erworben werden.",
+      question: "Are drinks included in the ticket price?",
+      answer: "No, drinks and food can be purchased on site.",
     },
   ]
 
@@ -91,7 +91,7 @@ Mit Top-Künstlern, modernem Veranstaltungsort und erstklassigem Service erwarte
           <h2 className="text-xl font-bold text-foreground line-clamp-1">{event.title}</h2>
           <Button variant="ghost" size="icon" onClick={onClose} className="text-foreground hover:bg-secondary">
             <X className="h-5 w-5" />
-            <span className="sr-only">Modal schließen</span>
+            <span className="sr-only">Close modal</span>
           </Button>
         </div>
 
@@ -123,7 +123,7 @@ Mit Top-Künstlern, modernem Veranstaltungsort und erstklassigem Service erwarte
               <div className="rounded-lg bg-secondary p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="h-4 w-4 text-primary" />
-                  <span className="text-xs text-muted-foreground">Datum</span>
+                  <span className="text-xs text-muted-foreground">Date</span>
                 </div>
                 <p className="text-sm font-semibold text-foreground">{formatDate(event.date)}</p>
               </div>
@@ -131,7 +131,7 @@ Mit Top-Künstlern, modernem Veranstaltungsort und erstklassigem Service erwarte
               <div className="rounded-lg bg-secondary p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <MapPin className="h-4 w-4 text-primary" />
-                  <span className="text-xs text-muted-foreground">Ort</span>
+                  <span className="text-xs text-muted-foreground">Location</span>
                 </div>
                 <p className="text-sm font-semibold text-foreground">{event.venue}</p>
               </div>
@@ -139,7 +139,7 @@ Mit Top-Künstlern, modernem Veranstaltungsort und erstklassigem Service erwarte
               <div className="rounded-lg bg-secondary p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Users className="h-4 w-4 text-primary" />
-                  <span className="text-xs text-muted-foreground">Kapazität</span>
+                  <span className="text-xs text-muted-foreground">Capacity</span>
                 </div>
                 <p className="text-sm font-semibold text-foreground">
                   {event.availableTickets}/{event.capacity}
@@ -157,7 +157,7 @@ Mit Top-Künstlern, modernem Veranstaltungsort und erstklassigem Service erwarte
                   Line-up
                 </TabsTrigger>
                 <TabsTrigger value="map" className="data-[state=active]:bg-primary">
-                  Karte
+                  Map
                 </TabsTrigger>
                 <TabsTrigger value="faqs" className="data-[state=active]:bg-primary">
                   FAQs
@@ -167,7 +167,7 @@ Mit Top-Künstlern, modernem Veranstaltungsort und erstklassigem Service erwarte
               {/* Info Tab */}
               <TabsContent value="info" className="mt-4 space-y-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-2">Beschreibung</h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-2">Description</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
                 </div>
 
@@ -186,7 +186,7 @@ Mit Top-Künstlern, modernem Veranstaltungsort und erstklassigem Service erwarte
                 </div>
 
                 <div className="rounded-lg bg-secondary p-4">
-                  <h3 className="text-sm font-semibold text-foreground mb-2">Adresse</h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-2">Address</h3>
                   <p className="text-sm text-muted-foreground">
                     {event.location?.address || `${event.venue}, ${event.city}`}
                   </p>
@@ -195,7 +195,7 @@ Mit Top-Künstlern, modernem Veranstaltungsort und erstklassigem Service erwarte
 
               {/* Line-up Tab */}
               <TabsContent value="lineup" className="mt-4 space-y-3">
-                <h3 className="text-sm font-semibold text-foreground">Künstler</h3>
+                <h3 className="text-sm font-semibold text-foreground">Artists</h3>
                 <div className="space-y-2">
                   {lineup.map((artist, idx) => (
                     <div key={idx} className="flex items-center gap-3 rounded-lg bg-secondary p-3 border border-border">
@@ -214,7 +214,7 @@ Mit Top-Künstlern, modernem Veranstaltungsort und erstklassigem Service erwarte
                     <p className="text-sm text-muted-foreground">
                       {event.venue}, {event.city}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">Karten-Integration hier</p>
+                    <p className="text-xs text-muted-foreground mt-1">Map integration here</p>
                   </div>
                 </div>
               </TabsContent>
@@ -238,11 +238,11 @@ Mit Top-Künstlern, modernem Veranstaltungsort und erstklassigem Service erwarte
               <div>
                 {event.priceFrom > 0 ? (
                   <div>
-                    <p className="text-xs text-muted-foreground">Ab</p>
+                    <p className="text-xs text-muted-foreground">From</p>
                     <p className="text-2xl font-bold text-foreground">€{event.priceFrom}</p>
                   </div>
                 ) : (
-                  <p className="text-lg font-bold text-green-400">Kostenlos</p>
+                  <p className="text-lg font-bold text-green-400">Free</p>
                 )}
               </div>
 
@@ -256,7 +256,7 @@ Mit Top-Künstlern, modernem Veranstaltungsort und erstklassigem Service erwarte
                   }`}
                 >
                   <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
-                  <span className="sr-only">Zu Favoriten hinzufügen</span>
+                  <span className="sr-only">Add to favorites</span>
                 </Button>
 
                 <Button
@@ -265,21 +265,21 @@ Mit Top-Künstlern, modernem Veranstaltungsort und erstklassigem Service erwarte
                   className="border-border bg-secondary text-foreground hover:bg-muted"
                 >
                   <Share2 className="h-5 w-5" />
-                  <span className="sr-only">Event teilen</span>
+                  <span className="sr-only">Share event</span>
                 </Button>
 
                 <Button
                   disabled={isOutOfStock}
                   className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isOutOfStock ? "Ausverkauft" : "Jetzt kaufen"}
+                  {isOutOfStock ? "Sold out" : "Buy now"}
                 </Button>
               </div>
             </div>
 
             {isOutOfStock && (
               <Button variant="outline" className="w-full border-border bg-secondary text-foreground hover:bg-muted">
-                Zur Warteliste hinzufügen
+                Add to waitlist
               </Button>
             )}
           </div>
