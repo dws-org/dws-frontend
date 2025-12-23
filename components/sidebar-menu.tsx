@@ -1,7 +1,8 @@
 "use client"
 
-import { Settings, History, CreditCard, HelpCircle, FileText, X } from "lucide-react"
+import { Settings, History, CreditCard, HelpCircle, FileText, X, CalendarPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import Link from "next/link"
 
 interface SidebarMenuProps {
@@ -11,6 +12,7 @@ interface SidebarMenuProps {
 
 export function SidebarMenu({ isOpen, onClose }: SidebarMenuProps) {
   const menuItems = [
+    { icon: CalendarPlus, label: "Events verwalten", href: "/manage" },
     { icon: Settings, label: "Settings", href: "/settings" },
     { icon: History, label: "Recent purchases", href: "/purchases" },
     { icon: CreditCard, label: "Payment methods", href: "/settings" },
@@ -50,7 +52,7 @@ export function SidebarMenu({ isOpen, onClose }: SidebarMenuProps) {
           <nav className="flex-1 space-y-1 p-4">
             {menuItems.map((item) => (
               <Link
-                key={item.href}
+                key={item.href + item.label}
                 href={item.href}
                 onClick={onClose}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
@@ -70,5 +72,3 @@ export function SidebarMenu({ isOpen, onClose }: SidebarMenuProps) {
     </>
   )
 }
-
-import { cn } from "@/lib/utils"

@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import Link from "next/link"
 import { Header } from "@/components/header"
 import { EventGrid } from "@/components/event-grid"
 import { TicketCard } from "@/components/ticket-card"
@@ -9,6 +10,7 @@ import { SidebarMenu } from "@/components/sidebar-menu"
 import { EventDetailModal } from "@/components/event-detail-modal"
 import { QRCodeModal } from "@/components/qr-code-modal"
 import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
 
 // Wir definieren den Typ hier, damit wir ihn nutzen können
 export type UiEvent = {
@@ -68,8 +70,6 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
   
   const [showAllTickets, setShowAllTickets] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-
-  // Die useEffects zum Laden (fetch) sind hier WEG, weil der Server das schon erledigt hat!
 
   const selectedEvent = events.find((e) => e.id === selectedEventId)
   const selectedTicket = mockTickets.find((t) => t.id === selectedTicketId)
@@ -161,6 +161,22 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
       )}
 
       <main className="mx-auto px-4 py-8 sm:px-6 lg:px-8 max-w-7xl">
+        {/* Manage Events Banner */}
+        <section className="mb-8">
+          <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Bist du Veranstalter?</h2>
+              <p className="text-muted-foreground">Erstelle und verwalte deine eigenen Events</p>
+            </div>
+            <Link href="/manage">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Events verwalten
+              </Button>
+            </Link>
+          </div>
+        </section>
+
         {/* My Tickets Section */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
