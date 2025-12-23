@@ -56,6 +56,7 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
 
   const isOutOfStock = (event.availableTickets || 0) <= 0
 
+  // Provide readable defaults so the modal stays informative when optional fields are missing.
   const description =
     event.description ||
     `
@@ -105,7 +106,7 @@ With top artists, modern venue and first-class service, you can expect a premium
               fill
               className="object-cover"
               onError={(e) => {
-                e.currentTarget.src = "/placeholder.svg?key=modal1"
+                e.currentTarget.src = "/community-event.png"
               }}
             />
             <div className="absolute top-3 left-3 flex flex-wrap gap-2">

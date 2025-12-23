@@ -1,0 +1,196 @@
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
+import { Plus, ArrowLeft } from "lucide-react"
+import { ManagedEventCard } from "@/components/managed-event-card"
+import { CreateEventModal } from "@/components/create-event-modal"
+
+export default function ManageEventsPage() {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [events, setEvents] = useState([
+    {
+      id: "1",
+      title: "Techno Night 2025",
+      date: "15. Feb 2025",
+      time: "22:00",
+      location: "Berghain, Berlin",
+      image: "/techno-club-night.jpg",
+      price: "29,99 €",
+      status: "published" as const,
+      ticketsSold: 342,
+      totalTickets: 500,
+    },
+    {
+      id: "2",
+      title: "Summer House Festival",
+      date: "10. Jul 2025",
+      time: "14:00",
+      location: "Tempelhofer Feld, Berlin",
+      image: "/summer-music-festival.png",
+      price: "49,99 €",
+      status: "draft" as const,
+      ticketsSold: 0,
+      totalTickets: 2000,
+    },
+  ])
+
+  const handleCreateEvent = (newEvent: any) => {
+    const event = {
+      id: Date.now().toString(),
+      title: newEvent.title,
+      date: new Date(newEvent.date).toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }),
+      time: newEvent.time,
+      location: newEvent.location,
+      image: newEvent.image || "/placeholder.svg",
+      price: newEvent.price,
+      status: "draft" as const,
+      ticketsSold: 0,
+      totalTickets: parseInt(newEvent.totalTickets),
+    }
+    setEvents([event, ...events])
+  }
+
+  const handleDeleteEvent = (id: string) => {
+    if (confirm("Möchtest du dieses Event wirklich löschen?")) {
+      setEvents(events.filter((e) => e.id !== id))
+    }
+  }
+
+  const handleEditEvent = (id: string) => {
+    alert(`Event bearbeiten: ${id}`)
+  }
+
+  const handleViewEvent = (id: string) => {
+    alert(`Event ansehen: ${id}`)
+  }
+
+  const publishedEvents = events.filter((e) => e.status === "published")
+  const draftEvents = events.filter((e) => e.status === "draft")
+  const endedEvents = events.filter((e) => e.status === "ended")
+
+  return (
+    <div className="min-h-screen bg-background">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Back Link */}
+        <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6">
+          <ArrowLeft className="h-4 w-4" />
+          Zurück zur Startseite
+        </Link>
+
+        {/* Header */}
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Events verwalten</h1>
+            <p className="mt-1 text-muted-foreground">Erstelle und verwalte deine Events</p>
+          </div>
+          <button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+          >
+            <Plus className="h-5 w-5" />
+            Event erstellen
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="mb-8 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-xl border border-border bg-card p-6">
+            <div className="text-sm text-muted-foreground">Veröffentlicht</div>
+            <div className="mt-2 text-3xl font-bold text-foreground">{publishedEvents.length}</div>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-6">
+            <div className="text-sm text-muted-foreground">Entwürfe</div>
+            <div className="mt-2 text-3xl font-bold text-foreground">{draftEvents.length}</div>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-6">
+            <div className="text-sm text-muted-foreground">Beendet</div>
+            <div className="mt-2 text-3xl font-bold text-foreground">{endedEvents.length}</div>
+          </div>
+        </div>
+
+        {/* Published Events */}
+        {publishedEvents.length > 0 && (
+          <section className="mb-12">
+            <h2 className="mb-4 text-xl font-semibold text-foreground">Veröffentlichte Events</h2>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {publishedEvents.map((event) => (
+                <ManagedEventCard
+                  key={event.id}
+                  {...event}
+                  onEdit={handleEditEvent}
+                  onDelete={handleDeleteEvent}
+                  onView={handleViewEvent}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Draft Events */}
+        {draftEvents.length > 0 && (
+          <section className="mb-12">
+            <h2 className="mb-4 text-xl font-semibold text-foreground">Entwürfe</h2>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {draftEvents.map((event) => (
+                <ManagedEventCard
+                  key={event.id}
+                  {...event}
+                  onEdit={handleEditEvent}
+                  onDelete={handleDeleteEvent}
+                  onView={handleViewEvent}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Ended Events */}
+        {endedEvents.length > 0 && (
+          <section>
+            <h2 className="mb-4 text-xl font-semibold text-foreground">Beendete Events</h2>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {endedEvents.map((event) => (
+                <ManagedEventCard
+                  key={event.id}
+                  {...event}
+                  onEdit={handleEditEvent}
+                  onDelete={handleDeleteEvent}
+                  onView={handleViewEvent}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Empty State */}
+        {events.length === 0 && (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-foreground">Noch keine Events erstellt</h3>
+              <p className="mt-2 text-muted-foreground">Erstelle dein erstes Event und beginne Tickets zu verkaufen.</p>
+              <button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+              >
+                <Plus className="h-5 w-5" />
+                Erstes Event erstellen
+              </button>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Create Event Modal */}
+      <CreateEventModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSave={handleCreateEvent}
+      />
+    </div>
+  )
+}
