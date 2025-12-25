@@ -5,6 +5,8 @@ import keycloak from '@/lib/keycloak'
 
 interface AuthContextType {
   user: any
+  roles: string[]
+  isOrganiser: boolean
   logout: () => void
 }
 
@@ -13,32 +15,38 @@ const AuthContext = createContext<AuthContextType | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [authenticated, setAuthenticated] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [roles, setRoles] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    console.log("1. Keycloak vorhanden?", keycloak)
-
     if (!keycloak) {
-      console.log("2. Kein Keycloak!")
       setIsLoading(false)
       return
     }
-
-    console.log("3. Starte Keycloak init...")
 
     keycloak.init({
       onLoad: 'login-required',
       checkLoginIframe: false
     }).then((auth: boolean) => {
-      console.log("4. Keycloak init erfolgreich, authenticated:", auth)
       setAuthenticated(auth)
       setIsLoading(false)
 
       if (auth) {
+        // User Profile laden
         keycloak.loadUserProfile().then((profile: any) => {
-          console.log("5. User Profile:", profile)
           setUser(profile)
         })
+
+        // Rollen aus Token auslesen
+        const tokenParsed = keycloak.tokenParsed as any
+        console.log("Token Parsed:", tokenParsed)
+        console.log("Token Parsed:", keycloak.token)
+        const realmRoles = tokenParsed?.realm_access?.roles || []
+        const clientRoles = tokenParsed?.resource_access?.['dws-frontend']?.roles || []
+        const allRoles = [...realmRoles, ...clientRoles]
+        
+        console.log("User Roles:", allRoles)
+        setRoles(allRoles)
       }
     }).catch((err: any) => {
       console.error('Keycloak init error:', err)
@@ -50,6 +58,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     keycloak?.logout()
   }
 
+  // Prüfen ob User die Organiser Rolle hat
+  const isOrganiser = roles.includes('organiser') || roles.includes('Organiser')
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -59,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, logout }}>
+    <AuthContext.Provider value={{ user, roles, isOrganiser, logout }}>
       {children}
     </AuthContext.Provider>
   )

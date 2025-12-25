@@ -1,16 +1,18 @@
 "use client"
 
-import { useMemo, useState } from "react"
 import Link from "next/link"
-import { Header } from "@/components/header"
-import { EventGrid } from "@/components/event-grid"
-import { TicketCard } from "@/components/ticket-card"
-import { FilterChips } from "@/components/filter-chips"
-import { SidebarMenu } from "@/components/sidebar-menu"
-import { EventDetailModal } from "@/components/event-detail-modal"
-import { QRCodeModal } from "@/components/qr-code-modal"
-import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { useMemo, useState } from "react"
+
+import { EventDetailModal } from "@/components/event-detail-modal"
+import { EventGrid } from "@/components/event-grid"
+import { FilterChips } from "@/components/filter-chips"
+import { Header } from "@/components/header"
+import { QRCodeModal } from "@/components/qr-code-modal"
+import { SidebarMenu } from "@/components/sidebar-menu"
+import { TicketCard } from "@/components/ticket-card"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/lib/AuthContext"
 
 // Wir definieren den Typ hier, damit wir ihn nutzen können
 export type UiEvent = {
@@ -64,12 +66,11 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
   const [ticketFilter, setTicketFilter] = useState("Current")
-  
-  // Wir nutzen direkt die Daten vom Server
   const [events] = useState<UiEvent[]>(initialEvents)
-  
   const [showAllTickets, setShowAllTickets] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+
+  const { isOrganiser } = useAuth()
 
   const selectedEvent = events.find((e) => e.id === selectedEventId)
   const selectedTicket = mockTickets.find((t) => t.id === selectedTicketId)
@@ -88,33 +89,30 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
 
   const handleFilterChange = (filter: string) => {
     setTicketFilter(filter)
-    if (filter === "Upcoming") {
-      setShowAllTickets(true)
-    } else {
-      setShowAllTickets(false)
-    }
+    setShowAllTickets(filter === "Upcoming")
   }
 
   const ticketsToDisplay = showAllTickets ? mockTickets : mockTickets.slice(0, 4)
-  const itemsPerRow = 4 
+  const itemsPerRow = 4
   const maxVisibleRows = 1
-  const visibleTickets = showAllTickets ? ticketsToDisplay : mockTickets.slice(0, itemsPerRow * maxVisibleRows)
+  const visibleTickets = showAllTickets
+    ? ticketsToDisplay
+    : mockTickets.slice(0, itemsPerRow * maxVisibleRows)
 
   const normalizedQuery = searchQuery.trim().toLowerCase()
   const filteredEvents = useMemo(() => {
     if (normalizedQuery.length === 0) return events
 
     return events.filter((event) => {
-      const haystack =
-        [
-          event.title,
-          event.city,
-          event.venue,
-          ...event.tags,
-          ...(event.badges ?? []),
-        ]
-          .join(" ")
-          .toLowerCase()
+      const haystack = [
+        event.title,
+        event.city,
+        event.venue,
+        ...event.tags,
+        ...(event.badges ?? []),
+      ]
+        .join(" ")
+        .toLowerCase()
       return haystack.includes(normalizedQuery)
     })
   }, [events, normalizedQuery])
@@ -133,8 +131,10 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
           event={{
             ...selectedEvent,
             description: selectedEvent.description,
-            capacity: selectedEvent.capacity ?? selectedEvent.availableTickets ?? 0,
-            availableTickets: selectedEvent.availableTickets ?? selectedEvent.capacity ?? 0,
+            capacity:
+              selectedEvent.capacity ?? selectedEvent.availableTickets ?? 0,
+            availableTickets:
+              selectedEvent.availableTickets ?? selectedEvent.capacity ?? 0,
             location: selectedEvent.location ?? {
               lat: 0,
               lng: 0,
@@ -160,38 +160,50 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
         />
       )}
 
-      <main className="mx-auto px-4 py-8 sm:px-6 lg:px-8 max-w-7xl">
-        {/* Manage Events Banner */}
-        <section className="mb-8">
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6">
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">Bist du Veranstalter?</h2>
-              <p className="text-muted-foreground">Erstelle und verwalte deine eigenen Events</p>
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {isOrganiser && (
+          <section className="mb-8">
+            <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-6">
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">
+                  Bist du Veranstalter?
+                </h2>
+                <p className="text-muted-foreground">
+                  Erstelle und verwalte deine eigenen Events
+                </p>
+              </div>
+              <Link href="/manage">
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Events verwalten
+                </Button>
+              </Link>
             </div>
-            <Link href="/manage">
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Events verwalten
-              </Button>
-            </Link>
-          </div>
-        </section>
+          </section>
+        )}
 
-        {/* My Tickets Section */}
         <section className="mb-12">
-          <div className="flex items-center justify-between mb-6">
+          <div className="mb-6 flex items-center justify-between">
             <h2 className="text-3xl font-bold text-foreground">My Tickets</h2>
           </div>
 
           <div className="mb-6">
-            <FilterChips filters={ticketFilters} activeFilter={ticketFilter} onFilterChange={handleFilterChange} />
+            <FilterChips
+              filters={ticketFilters}
+              activeFilter={ticketFilter}
+              onFilterChange={handleFilterChange}
+            />
           </div>
 
           {mockTickets.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {visibleTickets.map((ticket) => (
-                  <TicketCard key={ticket.id} {...ticket} onOpenClick={handleOpenTicket} />
+                  <TicketCard
+                    key={ticket.id}
+                    {...ticket}
+                    onOpenClick={handleOpenTicket}
+                  />
                 ))}
               </div>
               {!showAllTickets && mockTickets.length > visibleTickets.length && (
@@ -201,31 +213,39 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
                     variant="outline"
                     className="border-border text-foreground hover:bg-secondary"
                   >
-                    Show more tickets ({mockTickets.length - visibleTickets.length})
+                    Show more tickets ({mockTickets.length - visibleTickets.length}
+                    )
                   </Button>
                 </div>
               )}
             </>
           ) : (
             <div className="rounded-2xl border-2 border-dashed border-border p-12 text-center">
-              <p className="text-muted-foreground mb-4">No tickets found</p>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Find event now</Button>
+              <p className="mb-4 text-muted-foreground">No tickets found</p>
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                Find event now
+              </Button>
             </div>
           )}
         </section>
 
-        {/* New Events Section */}
         <section className="mb-12">
-          <div className="flex items-center justify-between mb-6">
+          <div className="mb-6 flex items-center justify-between">
             <h2 className="text-3xl font-bold text-foreground">New Events</h2>
           </div>
 
           {filteredEvents.length > 0 ? (
-            <EventGrid events={filteredEvents} onDetailsClick={handleDetailsClick} onBuyClick={handleBuyClick} />
+            <EventGrid
+              events={filteredEvents}
+              onDetailsClick={handleDetailsClick}
+              onBuyClick={handleBuyClick}
+            />
           ) : (
             <div className="rounded-2xl border-2 border-dashed border-border p-12 text-center">
-              <p className="text-muted-foreground mb-4">No events found</p>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Discover categories</Button>
+              <p className="mb-4 text-muted-foreground">No events found</p>
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                Discover categories
+              </Button>
             </div>
           )}
         </section>
