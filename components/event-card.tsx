@@ -19,7 +19,7 @@ interface EventCardProps {
   onDetailsClick: (id: string) => void
   onBuyClick: (id: string) => void
 }
-
+ 
 export function EventCard({
   id,
   title,
