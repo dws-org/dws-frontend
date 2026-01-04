@@ -59,7 +59,7 @@ jobs:
           token: ${{ secrets.GITOPS_PAT }}
           path: gitops
 
-      - name: Update image tag in dev environment
+      - name: Update image tag in production environment
         run: |
           cd gitops
           TAG=${{ needs.build-and-push.outputs.image_tag }}
@@ -73,3 +73,4 @@ jobs:
           git add .
           git diff --staged --quiet || git commit -m "Update dev image tag to ${{ needs.build-and-push.outputs.image_tag }}"
           git push
+
