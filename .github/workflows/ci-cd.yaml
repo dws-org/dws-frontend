@@ -63,7 +63,7 @@ jobs:
         run: |
           cd gitops
           TAG=${{ needs.build-and-push.outputs.image_tag }}
-          sed -i "s|tag:.*|tag: ${TAG}|" gitops-demo/environments/dev/values.yaml
+          sed -i "s|tag:.*|tag: ${TAG}|" gitops-demo/environments/production/values.yaml
 
       - name: Commit and push changes
         run: |
@@ -71,6 +71,7 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add .
-          git diff --staged --quiet || git commit -m "Update dev image tag to ${{ needs.build-and-push.outputs.image_tag }}"
+          git diff --staged --quiet || git commit -m "Update production image tag to ${{ needs.build-and-push.outputs.image_tag }}"
           git push
+
 
