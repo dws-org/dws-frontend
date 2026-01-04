@@ -6,6 +6,7 @@ import { Badge } from "@/components/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Image from "next/image"
 import { useState } from "react"
+import { TicketService } from "@/lib/ticketService"
 
 interface EventDetailModalProps {
   event: {
@@ -36,8 +37,32 @@ interface EventDetailModalProps {
 export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalProps) {
   const [isFavorite, setIsFavorite] = useState(false)
   const [activeTab, setActiveTab] = useState("info")
+  const [isPurchasing, setIsPurchasing] = useState(false)
+  const [purchaseError, setPurchaseError] = useState<string | null>(null)
 
   if (!isOpen) return null
+
+  const handleBuyTicket = async () => {
+    setIsPurchasing(true)
+    setPurchaseError(null)
+
+    try {
+      await TicketService.purchaseTicket({
+        event_id: event.id,
+        quantity: 1,
+        total_price: event.priceFrom,
+      })
+      
+      // Show success message and close modal
+      alert('Ticket purchased successfully! Check your purchases page.')
+      onClose()
+    } catch (error) {
+      console.error('Purchase failed:', error)
+      setPurchaseError(error instanceof Error ? error.message : 'Failed to purchase ticket')
+    } finally {
+      setIsPurchasing(false)
+    }
+  }
 
   const formatDate = (dateString: string) => {
     const d = new Date(dateString)
@@ -270,13 +295,20 @@ With top artists, modern venue and first-class service, you can expect a premium
                 </Button>
 
                 <Button
-                  disabled={isOutOfStock}
+                  disabled={isOutOfStock || isPurchasing}
+                  onClick={handleBuyTicket}
                   className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isOutOfStock ? "Sold out" : "Buy now"}
+                  {isPurchasing ? "Processing..." : isOutOfStock ? "Sold out" : "Buy now"}
                 </Button>
               </div>
             </div>
+
+            {purchaseError && (
+              <div className="rounded-lg bg-red-500/10 border border-red-500/50 p-3">
+                <p className="text-sm text-red-400">{purchaseError}</p>
+              </div>
+            )}
 
             {isOutOfStock && (
               <Button variant="outline" className="w-full border-border bg-secondary text-foreground hover:bg-muted">

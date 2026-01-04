@@ -1,7 +1,7 @@
 // Ticket API Service for dws-ticket-service
 
 const TICKET_SERVICE_URL = process.env.NEXT_PUBLIC_TICKET_SERVICE_URL || 
-  'http://dws-ticket-service-production.dws-ticket-service.svc.cluster.local';
+  'http://dws-ticket-service-production.dws-ticket-service.svc.cluster.local:80/api/v1';
 
 export interface Ticket {
   id: string;
@@ -33,7 +33,7 @@ export class TicketService {
    * Purchase tickets for an event
    */
   static async purchaseTicket(request: PurchaseRequest): Promise<Ticket> {
-    const response = await fetch(`${TICKET_SERVICE_URL}/api/v1/tickets/purchase`, {
+    const response = await fetch(`${TICKET_SERVICE_URL}/tickets/purchase`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify(request),
@@ -51,7 +51,7 @@ export class TicketService {
    * Get all tickets for the current user
    */
   static async getMyTickets(): Promise<Ticket[]> {
-    const response = await fetch(`${TICKET_SERVICE_URL}/api/v1/tickets/my-tickets`, {
+    const response = await fetch(`${TICKET_SERVICE_URL}/tickets/my-tickets`, {
       method: 'GET',
       headers: this.getAuthHeaders(),
     });
@@ -68,7 +68,7 @@ export class TicketService {
    * Get a specific ticket by ID
    */
   static async getTicketById(id: string): Promise<Ticket> {
-    const response = await fetch(`${TICKET_SERVICE_URL}/api/v1/tickets/${id}`, {
+    const response = await fetch(`${TICKET_SERVICE_URL}/tickets/${id}`, {
       method: 'GET',
       headers: this.getAuthHeaders(),
     });
@@ -85,7 +85,7 @@ export class TicketService {
    * Cancel a ticket
    */
   static async cancelTicket(id: string): Promise<Ticket> {
-    const response = await fetch(`${TICKET_SERVICE_URL}/api/v1/tickets/${id}`, {
+    const response = await fetch(`${TICKET_SERVICE_URL}/tickets/${id}`, {
       method: 'DELETE',
       headers: this.getAuthHeaders(),
     });

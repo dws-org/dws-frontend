@@ -27,6 +27,8 @@ spec:
         env:
         - name: API_URL
           value: "http://dws-event-service-production.dws-event-service.svc.cluster.local:80/api/v1/events"
+        - name: NEXT_PUBLIC_TICKET_SERVICE_URL
+          value: "http://dws-ticket-service-production.dws-ticket-service.svc.cluster.local:80/api/v1"
         - name: NODE_ENV
           value: "production"
         resources:
