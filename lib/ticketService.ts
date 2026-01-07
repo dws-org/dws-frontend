@@ -1,5 +1,6 @@
 // Ticket API Service for dws-ticket-service
 // Use relative API routes to proxy through Next.js server
+import keycloak from './keycloak';
 
 const TICKET_SERVICE_URL = '/api/tickets';
 
@@ -22,7 +23,7 @@ export interface PurchaseRequest {
 
 export class TicketService {
   private static getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('keycloak_token');
+    const token = keycloak?.token;
     console.log('[TicketService] getAuthHeaders:', { 
       hasToken: !!token, 
       tokenPreview: token ? token.substring(0, 30) + '...' : 'none' 
