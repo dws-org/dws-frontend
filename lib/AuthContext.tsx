@@ -7,6 +7,7 @@ interface AuthContextType {
   user: any
   roles: string[]
   isOrganiser: boolean
+  isAuthenticated: boolean
   logout: () => void
 }
 
@@ -70,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, roles, isOrganiser, logout }}>
+    <AuthContext.Provider value={{ user, roles, isOrganiser, isAuthenticated: authenticated, logout }}>
       {children}
     </AuthContext.Provider>
   )
