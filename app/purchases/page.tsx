@@ -9,6 +9,7 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { TicketService, Ticket } from "@/lib/ticketService"
 import { useAuth } from "@/lib/AuthContext"
+import keycloak from "@/lib/keycloak"
 
 interface Event {
   id: string
@@ -61,11 +62,13 @@ export default function PurchasesPage() {
 
   const loadEvents = async (eventIds: string[]) => {
     try {
+      const token = keycloak?.token
       // Batch load all events
       const response = await fetch('/api/event-details', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
         },
         body: JSON.stringify({ eventIds: [...new Set(eventIds)] }),
       })

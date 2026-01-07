@@ -10,9 +10,12 @@ export async function POST(request: NextRequest) {
 
     // Get all events from the event service
     const eventServiceUrl = 'http://dws-event-service-production.dws-event-service.svc.cluster.local';
+    const authHeader = request.headers.get('authorization');
+    
     const response = await fetch(`${eventServiceUrl}/api/v1/events`, {
       headers: {
         'Content-Type': 'application/json',
+        ...(authHeader && { 'Authorization': authHeader }),
       },
     });
 

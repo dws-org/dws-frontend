@@ -14,6 +14,7 @@ import { TicketCard } from "@/components/ticket-card"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/AuthContext"
 import { TicketService, Ticket } from "@/lib/ticketService"
+import keycloak from "@/lib/keycloak"
 
 // Wir definieren den Typ hier, damit wir ihn nutzen können
 export type UiEvent = {
@@ -79,11 +80,13 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
         // Load event details for tickets
         const eventIds = [...new Set(userTickets.map(t => t.event_id))]
         
+        const token = keycloak?.token
         // Batch load all events
         const response = await fetch('/api/event-details', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` }),
           },
           body: JSON.stringify({ eventIds }),
         })
