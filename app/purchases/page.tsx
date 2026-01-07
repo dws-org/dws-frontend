@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft, Loader2, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/header"
 import { SidebarMenu } from "@/components/sidebar-menu"
@@ -10,21 +10,35 @@ import { useState, useEffect } from "react"
 import { TicketService, Ticket } from "@/lib/ticketService"
 import { useAuth } from "@/lib/AuthContext"
 
+interface Event {
+  id: string
+  name: string
+  startDate: string
+  price: number
+}
+
 interface PurchaseData {
   id: string
   eventTitle: string
+  eventId: string
   date: string
   amount: number
   paymentMethod: string
   status: string
+  quantity: number
 }
+
+type FilterStatus = 'all' | 'confirmed' | 'pending' | 'cancelled'
 
 export default function PurchasesPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [purchases, setPurchases] = useState<PurchaseData[]>([])
+  const [filteredPurchases, setFilteredPurchases] = useState<PurchaseData[]>([])
+  const [events, setEvents] = useState<Record<string, Event>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all')
   const { isAuthenticated } = useAuth()
 
   useEffect(() => {
@@ -36,6 +50,46 @@ export default function PurchasesPage() {
     loadTickets()
   }, [isAuthenticated])
 
+  useEffect(() => {
+    // Filter purchases when filter changes
+    if (filterStatus === 'all') {
+      setFilteredPurchases(purchases)
+    } else {
+      setFilteredPurchases(purchases.filter(p => p.status === filterStatus))
+    }
+  }, [filterStatus, purchases])
+
+  const loadEvents = async (eventIds: string[]) => {
+    try {
+      // Fetch events from the events API
+      const uniqueEventIds = [...new Set(eventIds)]
+      const eventPromises = uniqueEventIds.map(async (eventId) => {
+        try {
+          const response = await fetch(`https://event.ltu-m7011e-6.se/api/events/${eventId}`)
+          if (response.ok) {
+            return await response.json()
+          }
+        } catch (err) {
+          console.error(`Failed to fetch event ${eventId}:`, err)
+        }
+        return null
+      })
+
+      const eventResults = await Promise.all(eventPromises)
+      const eventsMap: Record<string, Event> = {}
+      
+      eventResults.forEach((event) => {
+        if (event) {
+          eventsMap[event.id] = event
+        }
+      })
+
+      setEvents(eventsMap)
+    } catch (err) {
+      console.error('Error loading events:', err)
+    }
+  }
+
   const loadTickets = async () => {
     try {
       setLoading(true)
@@ -44,16 +98,22 @@ export default function PurchasesPage() {
       const ticketData = await TicketService.getMyTickets()
       setTickets(ticketData)
 
+      // Load event details
+      const eventIds = ticketData.map(t => t.event_id)
+      await loadEvents(eventIds)
+
       // Transform tickets to purchase data
       const purchaseData: PurchaseData[] = ticketData.map(ticket => ({
         id: ticket.id,
-        eventTitle: `Event ${ticket.event_id.substring(0, 8)}...`, // Will be enriched with event name later
+        eventId: ticket.event_id,
+        eventTitle: `Event ${ticket.event_id}`, // Will be updated after events load
         date: new Date(ticket.created_at).toLocaleDateString('de-DE', {
           day: '2-digit',
           month: 'short',
           year: 'numeric'
         }),
         amount: ticket.total_price,
+        quantity: ticket.quantity,
         paymentMethod: ticket.status === 'confirmed' ? 'Bezahlt' : 'Ausstehend',
         status: ticket.status
       }))
@@ -67,7 +127,18 @@ export default function PurchasesPage() {
     }
   }
 
-  const totalSpent = purchases.reduce((sum, p) => sum + p.amount, 0)
+  // Update event titles when events are loaded
+  useEffect(() => {
+    if (Object.keys(events).length > 0) {
+      setPurchases(prev => prev.map(p => ({
+        ...p,
+        eventTitle: events[p.eventId]?.name || p.eventTitle
+      })))
+    }
+  }, [events])
+
+  const totalSpent = filteredPurchases.reduce((sum, p) => sum + p.amount, 0)
+  const totalTickets = filteredPurchases.reduce((sum, p) => sum + p.quantity, 0)
 
   if (!isAuthenticated) {
     return (
@@ -139,34 +210,83 @@ export default function PurchasesPage() {
               </div>
 
               <div className="rounded-lg bg-card border border-border p-4">
-                <p className="text-sm text-muted-foreground mb-1">Anzahl Käufe</p>
-                <p className="text-2xl font-bold text-foreground">{purchases.length}</p>
+                <p className="text-sm text-muted-foreground mb-1">Anzahl Tickets</p>
+                <p className="text-2xl font-bold text-foreground">{totalTickets}</p>
               </div>
 
               <div className="rounded-lg bg-card border border-border p-4">
-                <p className="text-sm text-muted-foreground mb-1">Durchschnitt pro Kauf</p>
-                <p className="text-2xl font-bold text-foreground">
-                  €{purchases.length > 0 ? (totalSpent / purchases.length).toFixed(2) : '0.00'}
-                </p>
+                <p className="text-sm text-muted-foreground mb-1">Anzahl Käufe</p>
+                <p className="text-2xl font-bold text-foreground">{filteredPurchases.length}</p>
               </div>
+            </div>
+
+            {/* Filter Buttons */}
+            <div className="mb-6 flex flex-wrap gap-2">
+              <Button
+                variant={filterStatus === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterStatus('all')}
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Alle ({purchases.length})
+              </Button>
+              <Button
+                variant={filterStatus === 'confirmed' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterStatus('confirmed')}
+              >
+                Bestätigt ({purchases.filter(p => p.status === 'confirmed').length})
+              </Button>
+              <Button
+                variant={filterStatus === 'pending' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterStatus('pending')}
+              >
+                Ausstehend ({purchases.filter(p => p.status === 'pending').length})
+              </Button>
+              <Button
+                variant={filterStatus === 'cancelled' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterStatus('cancelled')}
+              >
+                Storniert ({purchases.filter(p => p.status === 'cancelled').length})
+              </Button>
             </div>
 
             {/* Purchases List */}
             <div className="space-y-3">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Kaufhistorie</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-4">
+                Kaufhistorie {filterStatus !== 'all' && `(${filterStatus})`}
+              </h2>
 
-              {purchases.length > 0 ? (
-                purchases.map((purchase) => (
+              {filteredPurchases.length > 0 ? (
+                filteredPurchases.map((purchase) => (
                   <PurchaseListItem key={purchase.id} {...purchase} />
                 ))
               ) : (
                 <div className="rounded-2xl border-2 border-dashed border-border p-12 text-center">
-                  <p className="text-muted-foreground">Keine Käufe gefunden</p>
-                  <Link href="/">
-                    <Button className="mt-4">Events durchstöbern</Button>
-                  </Link>
+                  <p className="text-muted-foreground">
+                    {filterStatus === 'all' 
+                      ? 'Keine Käufe gefunden' 
+                      : `Keine ${filterStatus} Tickets gefunden`}
+                  </p>
+                  {filterStatus !== 'all' && (
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={() => setFilterStatus('all')}
+                    >
+                      Alle anzeigen
+                    </Button>
+                  )}
+                  {purchases.length === 0 && (
+                    <Link href="/">
+                      <Button className="mt-4">Events durchstöbern</Button>
+                    </Link>
+                  )}
                 </div>
               )}
+            </div>
             </div>
 
             {/* Footer Info */}
