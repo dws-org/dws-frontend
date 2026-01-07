@@ -8,7 +8,7 @@ export async function GET(
 
   try {
     // Forward request to internal event service (use HTTP internally)
-    const eventServiceUrl = 'http://event-service-production.event-service.svc.cluster.local';
+    const eventServiceUrl = 'http://dws-event-service-production.dws-event-service.svc.cluster.local';
     const response = await fetch(`${eventServiceUrl}/api/events/${eventId}`, {
       headers: {
         'Content-Type': 'application/json',
@@ -16,6 +16,7 @@ export async function GET(
     });
 
     if (!response.ok) {
+      console.error(`Event API error for ${eventId}: ${response.status}`);
       return NextResponse.json(
         { error: 'Failed to fetch event' },
         { status: response.status }
