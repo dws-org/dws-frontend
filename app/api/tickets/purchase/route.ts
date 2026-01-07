@@ -6,8 +6,14 @@ export async function POST(request: NextRequest) {
   // Get Authorization header from client request
   const authHeader = request.headers.get('authorization')
   
+  console.log('[Purchase API] Request received', {
+    hasAuth: !!authHeader,
+    authPreview: authHeader ? authHeader.substring(0, 20) + '...' : 'none'
+  })
+  
   try {
     const body = await request.json()
+    console.log('[Purchase API] Body:', body)
     
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
