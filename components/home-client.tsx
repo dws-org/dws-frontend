@@ -78,28 +78,22 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
         
         // Load event details for tickets
         const eventIds = [...new Set(userTickets.map(t => t.event_id))]
-        const eventPromises = eventIds.map(async (eventId) => {
-          try {
-            const response = await fetch(`/api/events/${eventId}`)
-            if (response.ok) {
-              return await response.json()
-            }
-          } catch (err) {
-            console.error(`Failed to fetch event ${eventId}:`, err)
-          }
-          return null
-        })
-
-        const eventResults = await Promise.all(eventPromises)
-        const eventsData: Record<string, any> = {}
         
-        eventResults.forEach((event) => {
-          if (event) {
-            eventsData[event.id] = event
-          }
+        // Batch load all events
+        const response = await fetch('/api/event-details', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ eventIds }),
         })
 
-        setEventsMap(eventsData)
+        if (response.ok) {
+          const eventsData = await response.json()
+          setEventsMap(eventsData)
+        } else {
+          console.error('Failed to load events')
+        }
 
         // Transform tickets to card format
         const ticketCards: TicketCardData[] = userTickets.map(ticket => {

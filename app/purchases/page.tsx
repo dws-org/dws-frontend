@@ -61,30 +61,21 @@ export default function PurchasesPage() {
 
   const loadEvents = async (eventIds: string[]) => {
     try {
-      // Fetch events from the events API
-      const uniqueEventIds = [...new Set(eventIds)]
-      const eventPromises = uniqueEventIds.map(async (eventId) => {
-        try {
-          const response = await fetch(`/api/events/${eventId}`)
-          if (response.ok) {
-            return await response.json()
-          }
-        } catch (err) {
-          console.error(`Failed to fetch event ${eventId}:`, err)
-        }
-        return null
+      // Batch load all events
+      const response = await fetch('/api/event-details', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ eventIds: [...new Set(eventIds)] }),
       })
 
-      const eventResults = await Promise.all(eventPromises)
-      const eventsMap: Record<string, Event> = {}
-      
-      eventResults.forEach((event) => {
-        if (event) {
-          eventsMap[event.id] = event
-        }
-      })
-
-      setEvents(eventsMap)
+      if (response.ok) {
+        const eventsData = await response.json()
+        setEvents(eventsData)
+      } else {
+        console.error('Failed to load events')
+      }
     } catch (err) {
       console.error('Error loading events:', err)
     }
