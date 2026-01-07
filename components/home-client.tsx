@@ -80,7 +80,7 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
         const eventIds = [...new Set(userTickets.map(t => t.event_id))]
         const eventPromises = eventIds.map(async (eventId) => {
           try {
-            const response = await fetch(`https://event.ltu-m7011e-6.se/api/events/${eventId}`)
+            const response = await fetch(`/api/events/${eventId}`)
             if (response.ok) {
               return await response.json()
             }
