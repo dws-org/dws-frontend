@@ -147,8 +147,12 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
     setSelectedEventId(id)
   }
 
-  const handleBuyClick = (id: string) => {
-    console.log("Buy clicked for event:", id)
+  const handleBuyClick = async (id: string) => {
+    const event = events.find((e) => e.id === id)
+    if (!event) return
+    
+    // Open the detail modal instead for purchase
+    setSelectedEventId(id)
   }
 
   const handleOpenTicket = (id: string) => {

@@ -6,6 +6,7 @@ import { Badge } from "@/components/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Image from "next/image"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { TicketService } from "@/lib/ticketService"
 
 interface EventDetailModalProps {
@@ -35,6 +36,7 @@ interface EventDetailModalProps {
 }
 
 export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalProps) {
+  const router = useRouter()
   const [isFavorite, setIsFavorite] = useState(false)
   const [activeTab, setActiveTab] = useState("info")
   const [isPurchasing, setIsPurchasing] = useState(false)
@@ -47,14 +49,21 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
     setPurchaseError(null)
 
     try {
-      await TicketService.purchaseTicket({
+      const ticket = await TicketService.purchaseTicket({
         event_id: event.id,
         quantity: 1,
         total_price: event.priceFrom,
       })
       
-      // Show success message and close modal
-      alert('Ticket purchased successfully! Check your purchases page.')
+      // Redirect to success page with ticket details
+      const params = new URLSearchParams({
+        ticketId: ticket.id,
+        eventName: encodeURIComponent(event.title),
+        quantity: '1',
+        price: event.priceFrom.toString(),
+      })
+      
+      router.push(`/success?${params.toString()}`)
       onClose()
     } catch (error) {
       console.error('Purchase failed:', error)
