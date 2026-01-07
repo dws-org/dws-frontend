@@ -81,6 +81,8 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
         const eventIds = [...new Set(userTickets.map(t => t.event_id))]
         
         const token = keycloak?.token
+        let eventsData: any = {}
+        
         // Batch load all events
         const response = await fetch('/api/event-details', {
           method: 'POST',
@@ -92,7 +94,7 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
         })
 
         if (response.ok) {
-          const eventsData = await response.json()
+          eventsData = await response.json()
           setEventsMap(eventsData)
         } else {
           console.error('Failed to load events')
