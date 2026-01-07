@@ -287,7 +287,6 @@ export default function PurchasesPage() {
                 </div>
               )}
             </div>
-            </div>
 
             {/* Footer Info */}
             <div className="mt-8 p-4 rounded-lg bg-secondary border border-border">
