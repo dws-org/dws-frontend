@@ -23,6 +23,10 @@ export interface PurchaseRequest {
 export class TicketService {
   private static getAuthHeaders(): HeadersInit {
     const token = localStorage.getItem('keycloak_token');
+    console.log('[TicketService] getAuthHeaders:', { 
+      hasToken: !!token, 
+      tokenPreview: token ? token.substring(0, 30) + '...' : 'none' 
+    });
     return {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` }),
@@ -33,9 +37,12 @@ export class TicketService {
    * Purchase tickets for an event
    */
   static async purchaseTicket(request: PurchaseRequest): Promise<Ticket> {
+    const headers = this.getAuthHeaders();
+    console.log('[TicketService] purchaseTicket headers:', headers);
+    
     const response = await fetch(`${TICKET_SERVICE_URL}/purchase`, {
       method: 'POST',
-      headers: this.getAuthHeaders(),
+      headers,
       body: JSON.stringify(request),
     });
 
