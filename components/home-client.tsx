@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Plus } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 
 import { EventDetailModal } from "@/components/event-detail-modal"
 import { EventGrid } from "@/components/event-grid"
@@ -13,6 +13,7 @@ import { SidebarMenu } from "@/components/sidebar-menu"
 import { TicketCard } from "@/components/ticket-card"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/AuthContext"
+import { TicketService, Ticket } from "@/lib/ticketService"
 
 // Wir definieren den Typ hier, damit wir ihn nutzen können
 export type UiEvent = {
@@ -37,26 +38,15 @@ export type UiEvent = {
   faqs?: Array<{ question: string; answer: string }>
 }
 
-const mockTickets = [
-  {
-    id: "t1",
-    eventId: "e1",
-    eventTitle: "Indie Night – Aurora Live",
-    eventImage: "/indie.jpg",
-    status: "Active" as const,
-    seat: "Standing",
-    date: "Dec 05, 20:00",
-  },
-  {
-    id: "t2",
-    eventId: "e3",
-    eventTitle: "Open-Air Kino – Klassiker",
-    eventImage: "/classic-cinema.png",
-    status: "Past" as const,
-    seat: "Seat A12",
-    date: "Aug 15, 19:30",
-  },
-]
+type TicketCardData = {
+  id: string
+  eventId: string
+  eventTitle: string
+  eventImage: string
+  status: "Active" | "Past" | "Upcoming"
+  seat: string
+  date: string
+}
 
 const ticketFilters = ["Current", "Upcoming", "Past"]
 
@@ -67,13 +57,92 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
   const [ticketFilter, setTicketFilter] = useState("Current")
   const [events] = useState<UiEvent[]>(initialEvents)
+  const [tickets, setTickets] = useState<TicketCardData[]>([])
+  const [eventsMap, setEventsMap] = useState<Record<string, any>>({})
+  const [loadingTickets, setLoadingTickets] = useState(true)
   const [showAllTickets, setShowAllTickets] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
-  const { isOrganiser } = useAuth()
+  const { isOrganiser, isAuthenticated } = useAuth()
+
+  // Load user tickets
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLoadingTickets(false)
+      return
+    }
+
+    async function loadTickets() {
+      try {
+        const userTickets = await TicketService.getMyTickets()
+        
+        // Load event details for tickets
+        const eventIds = [...new Set(userTickets.map(t => t.event_id))]
+        const eventPromises = eventIds.map(async (eventId) => {
+          try {
+            const response = await fetch(`https://event.ltu-m7011e-6.se/api/events/${eventId}`)
+            if (response.ok) {
+              return await response.json()
+            }
+          } catch (err) {
+            console.error(`Failed to fetch event ${eventId}:`, err)
+          }
+          return null
+        })
+
+        const eventResults = await Promise.all(eventPromises)
+        const eventsData: Record<string, any> = {}
+        
+        eventResults.forEach((event) => {
+          if (event) {
+            eventsData[event.id] = event
+          }
+        })
+
+        setEventsMap(eventsData)
+
+        // Transform tickets to card format
+        const ticketCards: TicketCardData[] = userTickets.map(ticket => {
+          const event = eventsData[ticket.event_id]
+          const eventDate = event?.startDate ? new Date(event.startDate) : new Date(ticket.created_at)
+          const now = new Date()
+          
+          let status: "Active" | "Past" | "Upcoming" = "Active"
+          if (eventDate < now) {
+            status = "Past"
+          } else if (eventDate > new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+            status = "Upcoming"
+          }
+
+          return {
+            id: ticket.id,
+            eventId: ticket.event_id,
+            eventTitle: event?.name || `Event ${ticket.event_id}`,
+            eventImage: event?.imageUrl || "/placeholder.svg",
+            status,
+            seat: `${ticket.quantity} ${ticket.quantity === 1 ? 'Ticket' : 'Tickets'}`,
+            date: eventDate.toLocaleDateString('de-DE', {
+              month: 'short',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          }
+        })
+
+        setTickets(ticketCards)
+      } catch (err) {
+        console.error('Failed to load tickets:', err)
+      } finally {
+        setLoadingTickets(false)
+      }
+    }
+
+    loadTickets()
+  }, [isAuthenticated])
 
   const selectedEvent = events.find((e) => e.id === selectedEventId)
-  const selectedTicket = mockTickets.find((t) => t.id === selectedTicketId)
+  const selectedTicket = tickets.find((t) => t.id === selectedTicketId)
 
   const handleDetailsClick = (id: string) => {
     setSelectedEventId(id)
@@ -92,12 +161,23 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
     setShowAllTickets(filter === "Upcoming")
   }
 
-  const ticketsToDisplay = showAllTickets ? mockTickets : mockTickets.slice(0, 4)
+  const filteredTickets = useMemo(() => {
+    if (ticketFilter === "Current") {
+      return tickets.filter(t => t.status === "Active")
+    } else if (ticketFilter === "Upcoming") {
+      return tickets.filter(t => t.status === "Upcoming")
+    } else if (ticketFilter === "Past") {
+      return tickets.filter(t => t.status === "Past")
+    }
+    return tickets
+  }, [tickets, ticketFilter])
+
+  const ticketsToDisplay = showAllTickets ? filteredTickets : filteredTickets.slice(0, 4)
   const itemsPerRow = 4
   const maxVisibleRows = 1
   const visibleTickets = showAllTickets
     ? ticketsToDisplay
-    : mockTickets.slice(0, itemsPerRow * maxVisibleRows)
+    : filteredTickets.slice(0, itemsPerRow * maxVisibleRows)
 
   const normalizedQuery = searchQuery.trim().toLowerCase()
   const filteredEvents = useMemo(() => {
@@ -185,47 +265,75 @@ export function HomeClient({ initialEvents }: { initialEvents: UiEvent[] }) {
         <section className="mb-12">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-3xl font-bold text-foreground">My Tickets</h2>
+            {isAuthenticated && tickets.length > 0 && (
+              <Link href="/purchases">
+                <Button variant="outline">Alle anzeigen</Button>
+              </Link>
+            )}
           </div>
 
-          <div className="mb-6">
-            <FilterChips
-              filters={ticketFilters}
-              activeFilter={ticketFilter}
-              onFilterChange={handleFilterChange}
-            />
-          </div>
-
-          {mockTickets.length > 0 ? (
+          {!isAuthenticated ? (
+            <div className="rounded-2xl border-2 border-dashed border-border p-12 text-center">
+              <p className="mb-4 text-muted-foreground">Melde dich an, um deine Tickets zu sehen</p>
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                Anmelden
+              </Button>
+            </div>
+          ) : loadingTickets ? (
+            <div className="rounded-2xl border border-border p-12 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Lade Tickets...</p>
+            </div>
+          ) : (
             <>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {visibleTickets.map((ticket) => (
-                  <TicketCard
-                    key={ticket.id}
-                    {...ticket}
-                    onOpenClick={handleOpenTicket}
-                  />
-                ))}
+              <div className="mb-6">
+                <FilterChips
+                  filters={ticketFilters}
+                  activeFilter={ticketFilter}
+                  onFilterChange={handleFilterChange}
+                />
               </div>
-              {!showAllTickets && mockTickets.length > visibleTickets.length && (
-                <div className="mt-6 text-center">
-                  <Button
-                    onClick={() => setShowAllTickets(true)}
-                    variant="outline"
-                    className="border-border text-foreground hover:bg-secondary"
-                  >
-                    Show more tickets ({mockTickets.length - visibleTickets.length}
-                    )
-                  </Button>
+
+              {filteredTickets.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {visibleTickets.map((ticket) => (
+                      <TicketCard
+                        key={ticket.id}
+                        {...ticket}
+                        onOpenClick={handleOpenTicket}
+                      />
+                    ))}
+                  </div>
+                  {!showAllTickets && filteredTickets.length > visibleTickets.length && (
+                    <div className="mt-6 text-center">
+                      <Button
+                        onClick={() => setShowAllTickets(true)}
+                        variant="outline"
+                        className="border-border text-foreground hover:bg-secondary"
+                      >
+                        Zeige mehr Tickets ({filteredTickets.length - visibleTickets.length})
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="rounded-2xl border-2 border-dashed border-border p-12 text-center">
+                  <p className="mb-4 text-muted-foreground">
+                    {ticketFilter === "Current" 
+                      ? "Keine aktiven Tickets" 
+                      : ticketFilter === "Past"
+                      ? "Keine vergangenen Tickets"
+                      : "Keine bevorstehenden Tickets"}
+                  </p>
+                  <Link href="/">
+                    <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                      Events durchstöbern
+                    </Button>
+                  </Link>
                 </div>
               )}
             </>
-          ) : (
-            <div className="rounded-2xl border-2 border-dashed border-border p-12 text-center">
-              <p className="mb-4 text-muted-foreground">No tickets found</p>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                Find event now
-              </Button>
-            </div>
           )}
         </section>
 
