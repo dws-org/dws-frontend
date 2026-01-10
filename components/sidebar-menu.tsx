@@ -4,6 +4,7 @@ import { Settings, History, CreditCard, HelpCircle, FileText, X, CalendarPlus } 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { useAuth } from "@/lib/AuthContext"
 
 interface SidebarMenuProps {
   isOpen: boolean
@@ -11,8 +12,10 @@ interface SidebarMenuProps {
 }
 
 export function SidebarMenu({ isOpen, onClose }: SidebarMenuProps) {
+  const { isOrganiser } = useAuth()
+
   const menuItems = [
-    { icon: CalendarPlus, label: "Events verwalten", href: "/manage" },
+    ...(isOrganiser ? [{ icon: CalendarPlus, label: "Events verwalten", href: "/manage" }] : []),
     { icon: Settings, label: "Settings", href: "/settings" },
     { icon: History, label: "Recent purchases", href: "/purchases" },
     { icon: CreditCard, label: "Payment methods", href: "/settings" },

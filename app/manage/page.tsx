@@ -1,12 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Plus, ArrowLeft } from "lucide-react"
 import { ManagedEventCard } from "@/components/managed-event-card"
 import { CreateEventModal } from "@/components/create-event-modal"
+import { useAuth } from "@/lib/AuthContext"
+import keycloak from "@/lib/keycloak"
+import { useRouter } from "next/navigation"
 
 export default function ManageEventsPage() {
+  const { isOrganiser, isAuthenticated } = useAuth()
+  const router = useRouter()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [events, setEvents] = useState([
     {
@@ -35,24 +40,82 @@ export default function ManageEventsPage() {
     },
   ])
 
-  const handleCreateEvent = (newEvent: any) => {
-    const event = {
-      id: Date.now().toString(),
-      title: newEvent.title,
-      date: new Date(newEvent.date).toLocaleDateString("de-DE", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }),
-      time: newEvent.time,
-      location: newEvent.location,
-      image: newEvent.image || "/placeholder.svg",
-      price: newEvent.price,
-      status: "draft" as const,
-      ticketsSold: 0,
-      totalTickets: parseInt(newEvent.totalTickets),
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/')
+      return
     }
-    setEvents([event, ...events])
+    if (!isOrganiser) {
+      alert('Zugriff verweigert: Du benötigst die Organiser-Rolle')
+      router.push('/')
+    }
+  }, [isAuthenticated, isOrganiser, router])
+
+  const handleCreateEvent = async (newEvent: any) => {
+    try {
+      const token = keycloak?.token
+      if (!token) {
+        alert('Bitte melde dich erneut an')
+        return
+      }
+
+      // Format data for backend API
+      const eventData = {
+        name: newEvent.title,
+        description: newEvent.description,
+        startDate: new Date(newEvent.date + 'T00:00:00Z').toISOString(),
+        startTime: new Date(newEvent.date + 'T' + newEvent.time + ':00Z').toISOString(),
+        endDate: new Date(newEvent.date + 'T23:59:59Z').toISOString(),
+        location: newEvent.location,
+        price: newEvent.price,
+        capacity: parseInt(newEvent.totalTickets),
+        imageUrl: newEvent.image || '/placeholder.svg',
+        category: newEvent.category || 'general',
+        organizerId: 'org-001', // TODO: Get from user profile
+      }
+
+      const response = await fetch('/api/events/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(eventData),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.details || 'Failed to create event')
+      }
+
+      const createdEvent = await response.json()
+      
+      // Add to local state
+      const event = {
+        id: createdEvent.id,
+        title: createdEvent.name,
+        date: new Date(createdEvent.startDate).toLocaleDateString("de-DE", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }),
+        time: new Date(createdEvent.startTime).toLocaleTimeString("de-DE", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        location: createdEvent.location,
+        image: createdEvent.imageUrl,
+        price: `${createdEvent.price} €`,
+        status: "published" as const,
+        ticketsSold: 0,
+        totalTickets: createdEvent.capacity,
+      }
+      setEvents([event, ...events])
+      alert('Event erfolgreich erstellt!')
+    } catch (error) {
+      console.error('Error creating event:', error)
+      alert(`Fehler beim Erstellen: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   const handleDeleteEvent = (id: string) => {
@@ -67,6 +130,14 @@ export default function ManageEventsPage() {
 
   const handleViewEvent = (id: string) => {
     alert(`Event ansehen: ${id}`)
+  }
+
+  if (!isAuthenticated || !isOrganiser) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-foreground">Zugriff verweigert...</p>
+      </div>
+    )
   }
 
   const publishedEvents = events.filter((e) => e.status === "published")
