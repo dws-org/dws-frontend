@@ -24,9 +24,11 @@ type ApiEvent = {
 }
 
 // Hilfsfunktion: Mappt Backend-Daten auf das Frontend-Format
-function mapApiEventToUiEvent(event: ApiEvent): UiEvent {
+function mapApiEventToUiEvent(event: ApiEvent, soldTickets: number = 0): UiEvent {
   const locationText = event.location || "Location to be announced"
   const [cityFromLocation] = locationText.split(",")
+  const capacity = event.capacity || 0
+  const available = Math.max(0, capacity - soldTickets)
 
   return {
     id: event.id,
@@ -39,8 +41,8 @@ function mapApiEventToUiEvent(event: ApiEvent): UiEvent {
     tags: event.category ? [event.category] : [],
     badges: event.category ? [event.category] : [],
     description: event.description,
-    capacity: event.capacity,
-    availableTickets: event.capacity,
+    capacity: capacity,
+    availableTickets: available,
     lineup: [],
     location: {
       lat: 0,
@@ -88,9 +90,29 @@ export function EventsLoader() {
         if (!Array.isArray(data)) {
           console.error("API response is not an array:", data)
           setEvents([])
-        } else {
-          setEvents(data.map(mapApiEventToUiEvent))
+          setIsLoading(false)
+          return
         }
+
+        // Load event stats to calculate sold tickets
+        let ticketsByEvent: Record<string, number> = {}
+        try {
+          const statsRes = await fetch('/api/event-stats', {
+            cache: 'no-store',
+          })
+          if (statsRes.ok) {
+            const stats: Array<{eventId: string, ticketsSold: number}> = await statsRes.json()
+            ticketsByEvent = stats.reduce((acc, stat) => {
+              acc[stat.eventId] = stat.ticketsSold
+              return acc
+            }, {} as Record<string, number>)
+          }
+        } catch (err) {
+          console.log('Could not load event stats:', err)
+        }
+        
+        // Map events with sold tickets info
+        setEvents(data.map(event => mapApiEventToUiEvent(event, ticketsByEvent[event.id] || 0)))
       } catch (err) {
         console.error('Failed to load events:', err)
         setError('Network error')
