@@ -24,7 +24,7 @@ export default function SuccessPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-900 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
         <div className="bg-card border border-border rounded-3xl shadow-2xl p-8 md:p-12 text-center space-y-8">
           <div className="flex justify-center">
