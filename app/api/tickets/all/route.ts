@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const TICKET_SERVICE_URL = process.env.TICKET_SERVICE_URL || 'http://dws-ticket-service-production.dws-ticket-service.svc.cluster.local'
+const TICKET_SERVICE_URL = process.env.TICKET_SERVICE_URL || 'http://dws-ticket-service-production.dws-ticket-service.svc.cluster.local:80'
 
 export async function GET(request: NextRequest) {
   try {
