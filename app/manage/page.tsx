@@ -58,6 +58,7 @@ export default function ManageEventsPage() {
       let ticketsByEvent: Record<string, number> = {}
       if (ticketsResponse.ok) {
         const allTickets = await ticketsResponse.json()
+        console.log('Loaded tickets:', allTickets.length)
         // Count confirmed tickets per event
         ticketsByEvent = allTickets
           .filter((t: any) => t.status === 'confirmed')
@@ -65,6 +66,9 @@ export default function ManageEventsPage() {
             acc[ticket.eventId] = (acc[ticket.eventId] || 0) + ticket.quantity
             return acc
           }, {})
+        console.log('Tickets by event:', ticketsByEvent)
+      } else {
+        console.error('Failed to load tickets:', ticketsResponse.status, await ticketsResponse.text())
       }
       
       // Transform events to match component format
