@@ -13,32 +13,8 @@ export default function ManageEventsPage() {
   const { isOrganiser, isAuthenticated } = useAuth()
   const router = useRouter()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [events, setEvents] = useState([
-    {
-      id: "1",
-      title: "Techno Night 2025",
-      date: "15. Feb 2025",
-      time: "22:00",
-      location: "Berghain, Berlin",
-      image: "/techno-club-night.jpg",
-      price: "29,99 €",
-      status: "published" as const,
-      ticketsSold: 342,
-      totalTickets: 500,
-    },
-    {
-      id: "2",
-      title: "Summer House Festival",
-      date: "10. Jul 2025",
-      time: "14:00",
-      location: "Tempelhofer Feld, Berlin",
-      image: "/summer-music-festival.png",
-      price: "49,99 €",
-      status: "draft" as const,
-      ticketsSold: 0,
-      totalTickets: 2000,
-    },
-  ])
+  const [events, setEvents] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -48,8 +24,77 @@ export default function ManageEventsPage() {
     if (!isOrganiser) {
       alert('Zugriff verweigert: Du benötigst die Organiser-Rolle')
       router.push('/')
+      return
     }
+    loadEvents()
   }, [isAuthenticated, isOrganiser, router])
+
+  const loadEvents = async () => {
+    try {
+      const token = keycloak?.token
+      if (!token) return
+
+      // Load all events
+      const eventsResponse = await fetch('/api/events/all', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!eventsResponse.ok) {
+        console.error('Failed to load events')
+        return
+      }
+
+      const allEvents = await eventsResponse.json()
+
+      // Load all tickets to calculate ticketsSold
+      const ticketsResponse = await fetch('/api/tickets/all', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      let ticketsByEvent: Record<string, number> = {}
+      if (ticketsResponse.ok) {
+        const allTickets = await ticketsResponse.json()
+        // Count confirmed tickets per event
+        ticketsByEvent = allTickets
+          .filter((t: any) => t.status === 'confirmed')
+          .reduce((acc: Record<string, number>, ticket: any) => {
+            acc[ticket.eventId] = (acc[ticket.eventId] || 0) + ticket.quantity
+            return acc
+          }, {})
+      }
+      
+      // Transform events to match component format
+      const transformedEvents = allEvents.map((event: any) => ({
+        id: event.id,
+        title: event.name,
+        date: new Date(event.startDate).toLocaleDateString("de-DE", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }),
+        time: new Date(event.startTime).toLocaleTimeString("de-DE", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        location: event.location,
+        image: event.imageUrl || '/placeholder.svg',
+        price: `${event.price} €`,
+        status: "published" as const,
+        ticketsSold: ticketsByEvent[event.id] || 0,
+        totalTickets: event.capacity,
+      }))
+
+      setEvents(transformedEvents)
+    } catch (error) {
+      console.error('Error loading events:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleCreateEvent = async (newEvent: any) => {
     try {
@@ -110,7 +155,8 @@ export default function ManageEventsPage() {
         ticketsSold: 0,
         totalTickets: createdEvent.capacity,
       }
-      setEvents([event, ...events])
+      // Reload events from backend to get fresh data
+      await loadEvents()
       alert('Event erfolgreich erstellt!')
     } catch (error) {
       console.error('Error creating event:', error)
