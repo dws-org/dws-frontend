@@ -48,27 +48,22 @@ export default function ManageEventsPage() {
 
       const allEvents = await eventsResponse.json()
 
-      // Load all tickets to calculate ticketsSold
-      const ticketsResponse = await fetch('/api/tickets/all', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-
+      // Load event stats to calculate ticketsSold
       let ticketsByEvent: Record<string, number> = {}
-      if (ticketsResponse.ok) {
-        const allTickets = await ticketsResponse.json()
-        console.log('Loaded tickets:', allTickets.length)
-        // Count confirmed tickets per event
-        ticketsByEvent = allTickets
-          .filter((t: any) => t.status === 'confirmed')
-          .reduce((acc: Record<string, number>, ticket: any) => {
-            acc[ticket.eventId] = (acc[ticket.eventId] || 0) + ticket.quantity
+      try {
+        const statsResponse = await fetch('/api/event-stats')
+        if (statsResponse.ok) {
+          const stats: Array<{eventId: string, ticketsSold: number}> = await statsResponse.json()
+          ticketsByEvent = stats.reduce((acc, stat) => {
+            acc[stat.eventId] = stat.ticketsSold
             return acc
-          }, {})
-        console.log('Tickets by event:', ticketsByEvent)
-      } else {
-        console.error('Failed to load tickets:', ticketsResponse.status, await ticketsResponse.text())
+          }, {} as Record<string, number>)
+          console.log('Event stats loaded:', ticketsByEvent)
+        } else {
+          console.error('Failed to load event stats:', statsResponse.status)
+        }
+      } catch (err) {
+        console.error('Error loading event stats:', err)
       }
       
       // Transform events to match component format
