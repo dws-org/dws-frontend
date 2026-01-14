@@ -101,7 +101,7 @@ export function CreateEventModal({ isOpen, onClose, onSave }: CreateEventModalPr
 
           {/* Event Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">Event Titel *</Label>
+            <Label htmlFor="title">Title *</Label>
             <Input
               id="title"
               type="text"
@@ -114,10 +114,10 @@ export function CreateEventModal({ isOpen, onClose, onSave }: CreateEventModalPr
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Beschreibung *</Label>
+            <Label htmlFor="description">Description *</Label>
             <Textarea
               id="description"
-              placeholder="Beschreibe dein Event..."
+              placeholder="Describe your event..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
@@ -128,7 +128,7 @@ export function CreateEventModal({ isOpen, onClose, onSave }: CreateEventModalPr
           {/* Date and Time */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="date">Datum *</Label>
+              <Label htmlFor="date">Date *</Label>
               <Input
                 id="date"
                 type="date"
@@ -138,7 +138,7 @@ export function CreateEventModal({ isOpen, onClose, onSave }: CreateEventModalPr
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="time">Uhrzeit *</Label>
+              <Label htmlFor="time">Time *</Label>
               <Input
                 id="time"
                 type="time"
@@ -151,11 +151,11 @@ export function CreateEventModal({ isOpen, onClose, onSave }: CreateEventModalPr
 
           {/* Location */}
           <div className="space-y-2">
-            <Label htmlFor="location">Ort *</Label>
+            <Label htmlFor="location">Location *</Label>
             <Input
               id="location"
               type="text"
-              placeholder="z.B. Berghain, Berlin"
+              placeholder="e.g. Berghain, Berlin"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               required
@@ -164,11 +164,11 @@ export function CreateEventModal({ isOpen, onClose, onSave }: CreateEventModalPr
 
           {/* Category */}
           <div className="space-y-2">
-            <Label htmlFor="category">Kategorie *</Label>
+            <Label htmlFor="category">Category *</Label>
             <Input
               id="category"
               type="text"
-              placeholder="z.B. Techno, House, Hip-Hop"
+              placeholder="e.g. Techno, House, Hip-Hop"
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
               required
@@ -178,22 +178,22 @@ export function CreateEventModal({ isOpen, onClose, onSave }: CreateEventModalPr
           {/* Price and Tickets */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="price">Preis *</Label>
+              <Label htmlFor="price">Price *</Label>
               <Input
                 id="price"
                 type="text"
-                placeholder="z.B. 29,99 € oder Kostenlos"
+                placeholder="e.g. 29.99 € or Free"
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="totalTickets">Anzahl Tickets *</Label>
+              <Label htmlFor="totalTickets">Number of Tickets *</Label>
               <Input
                 id="totalTickets"
                 type="number"
-                placeholder="z.B. 500"
+                placeholder="e.g. 500"
                 value={formData.totalTickets}
                 onChange={(e) => setFormData({ ...formData, totalTickets: e.target.value })}
                 required
@@ -207,7 +207,7 @@ export function CreateEventModal({ isOpen, onClose, onSave }: CreateEventModalPr
             <div className="flex gap-2">
               <Input
                 type="text"
-                placeholder="Künstler hinzufügen"
+                placeholder="Add artist/band"
                 value={currentArtist}
                 onChange={(e) => setCurrentArtist(e.target.value)}
                 onKeyDown={(e) => {
@@ -248,10 +248,10 @@ export function CreateEventModal({ isOpen, onClose, onSave }: CreateEventModalPr
           {/* Actions */}
           <div className="flex gap-3 pt-4">
             <Button type="button" variant="outline" className="flex-1 bg-transparent" onClick={onClose}>
-              Abbrechen
+              Cancel
             </Button>
             <Button type="submit" className="flex-1">
-              Event erstellen
+              Create Event
             </Button>
           </div>
         </form>

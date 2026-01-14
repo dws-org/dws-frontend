@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     keycloak.logout()
   }
 
-  // Zeige Loading während Keycloak lädt
+  // Show loading state while authenticating
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">

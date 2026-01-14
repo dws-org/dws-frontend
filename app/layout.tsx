@@ -9,7 +9,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Dynamischer Projekt - Event Tickets",
+  title: "Eventmaster - Event Tickets",
   description: "Discover and manage your events with ease",
   generator: "v0.app",
   icons: {
